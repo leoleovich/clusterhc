@@ -1,0 +1,19 @@
+# Meaning of params please see at https://github.com/leoleovich/clusterhc/blob/master/README.md
+localBind = "127.0.0.1:9200"
+
+[galera]
+enabled = true
+user = "user"
+pass = "pass"
+host = "localhost"
+port = 3306
+local_state = 4
+sst_method = "xtrabackup-v2"
+
+[rabbitmq]
+enabled = true
+user = "user"
+pass = "pass"
+host = "localhost"
+port = 15672
+nodes = [ "node1", "node2", "node3" ]
