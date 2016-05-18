@@ -1,8 +1,10 @@
 # Meaning of params please see at https://github.com/leoleovich/clusterhc/blob/master/README.md
 localBind = "127.0.0.1:9200"
+log = "/var/log/clusterhc/clusterhc.log"
 
 [galera]
 enabled = true
+interval = 5
 user = "user"
 pass = "pass"
 host = "localhost"
@@ -12,6 +14,7 @@ sst_method = "xtrabackup-v2"
 
 [rabbitmq]
 enabled = true
+interval = 5
 user = "user"
 pass = "pass"
 host = "localhost"

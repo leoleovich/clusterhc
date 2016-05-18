@@ -1,13 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"encoding/json"
+	"time"
+	"log"
 )
-type Rabbitmq struct {
+type ConfRabbitmq struct {
 	Enabled bool
+	Interval int
 	User string
 	Pass string
 	Host string
@@ -15,52 +17,52 @@ type Rabbitmq struct {
 	Nodes []string
 }
 
+type Rabbitmq struct {
+	Conf ConfRabbitmq
+	Status Status
+	lg log.Logger
+}
 
-
-func (rmq Rabbitmq) checkRabbitmq(w http.ResponseWriter, r *http.Request) {
+func (rmq * Rabbitmq) check() {
 
 	client := &http.Client{}
-	url := "http://" + rmq.Host + ":" + strconv.Itoa(rmq.Port) + "/api/nodes"
+	url := "http://" + rmq.Conf.Host + ":" + strconv.Itoa(rmq.Conf.Port) + "/api/nodes"
 	req, err := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth(rmq.User, rmq.Pass)
+	req.SetBasicAuth(rmq.Conf.User, rmq.Conf.Pass)
 	res, err := client.Do(req)
 	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintln(w, reply_500)
-		return
+		rmq.lg.Println(err.Error())
+		rmq.Status.PartOfCluster = false
 
-	}
-	defer res.Body.Close()
+	} else {
+		decoder := json.NewDecoder(res.Body)
+		type Node struct {
+			Name string
+		}
+		var n []Node
+		err = decoder.Decode(&n)
+		if err != nil {
+			rmq.lg.Println(err.Error())
+			rmq.Status.PartOfCluster = false
+		} else {
+			var found int
+			for _, node := range n {
+				for _, nodeToCheck := range rmq.Conf.Nodes {
+					if (node.Name == "rabbit@" + nodeToCheck) {
+						found++
+						break
+					}
+				}
+			}
 
-	decoder := json.NewDecoder(res.Body)
-	type Node struct {
-		Name string
-	}
-	var n []Node
-	err = decoder.Decode(&n)
-	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintln(w, reply_500)
-		return
-	}
-
-	var found int
-	for _, node := range n {
-		for _, nodeToCheck := range rmq.Nodes {
-			if (node.Name == "rabbit@" + nodeToCheck) {
-				found++
-				break
+			if found == len(rmq.Conf.Nodes) {
+				rmq.Status.PartOfCluster = true
+			} else {
+				rmq.Status.PartOfCluster = false
+				rmq.lg.Println("Can not find all node in cluster")
 			}
 		}
 	}
-
-	if found == len(rmq.Nodes) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, reply_200)
-		return
-	} else {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintln(w, reply_500)
-		return
-	}
+	res.Body.Close()
+	rmq.Status.Timestamp = time.Now()
 }

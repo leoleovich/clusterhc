@@ -3,12 +3,19 @@ package main
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"fmt"
-	"net/http"
 	"strconv"
+	"time"
+	"log"
 )
 type Galera struct {
+	Conf ConfGalera
+	Status Status
+	lg log.Logger
+}
+
+type ConfGalera struct {
 	Enabled bool
+	Interval int
 	User string
 	Pass string
 	Host string
@@ -24,46 +31,37 @@ const wsrep_sst_method_query = "show global variables where variable_name = ?"
 
 
 
-func (g Galera) checkGalera(w http.ResponseWriter, r *http.Request) {
-	var wsrep_sst_method string
-	var wsrep_local_state int
-	var varName string
+func (g * Galera) check() {
+	for ;; time.Sleep(time.Duration(g.Conf.Interval) * time.Second) {
+		var wsrep_sst_method string
+		var wsrep_local_state int
+		var varName string
 
-	db, err := sql.Open("mysql", g.User + ":" + g.Pass + "@tcp(" + g.Host + ":" + strconv.Itoa(g.Port) + ")/")
-	if err != nil {
-		fmt.Println("Can not connect to database: ", err.Error())
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintln(w, reply_500)
-		return
-	}
-	defer db.Close()
+		db, err := sql.Open("mysql", g.Conf.User + ":" + g.Conf.Pass + "@tcp(" + g.Conf.Host + ":" + strconv.Itoa(g.Conf.Port) + ")/")
+		err = db.QueryRow(wsrep_local_state_query, "wsrep_local_state").Scan(&varName, &wsrep_local_state)
 
+		if err != nil {
+			g.lg.Println("Error querying " + wsrep_local_state_query + ": ", err.Error())
+			g.Status.PartOfCluster = false
 
-	err = db.QueryRow(wsrep_local_state_query, "wsrep_local_state").Scan(&varName, &wsrep_local_state)
-	if err != nil {
-		fmt.Println("Error querying " + wsrep_local_state_query + ": ", err.Error())
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintln(w, reply_500)
-		return
-	}
-
-	err = db.QueryRow(wsrep_sst_method_query, "wsrep_sst_method").Scan(&varName, &wsrep_sst_method)
-	if err != nil {
-		fmt.Println("Error querying " + wsrep_sst_method_query + ": ", err.Error())
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintln(w, reply_500)
-		return
-	}
-
-	if wsrep_local_state == g.Local_state && wsrep_sst_method == g.Sst_method {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, reply_200)
-		return
-	} else {
-		fmt.Printf("wsrep_local_state is %s, but should be %d", wsrep_local_state, g.Local_state)
-		fmt.Printf("wsrep_sst_method is %s, but should be %d", wsrep_sst_method, g.Sst_method)
-		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintln(w, reply_500)
-		return
+		} else {
+			err = db.QueryRow(wsrep_sst_method_query, "wsrep_sst_method").Scan(&varName, &wsrep_sst_method)
+			if err != nil {
+				g.lg.Println("Error querying " + wsrep_sst_method_query + ": ", err.Error())
+				g.Status.PartOfCluster = false
+			} else {
+				if wsrep_local_state == g.Conf.Local_state && wsrep_sst_method == g.Conf.Sst_method {
+					g.Status.PartOfCluster = true
+				} else {
+					g.lg.Printf("wsrep_local_state is %s, but should be %d", wsrep_local_state, g.Conf.Local_state)
+					g.lg.Printf("wsrep_sst_method is %s, but should be %d", wsrep_sst_method, g.Conf.Sst_method)
+					g.Status.PartOfCluster = false
+				}
+			}
+		}
+		db.Close()
+		g.Status.Timestamp = time.Now()
 	}
 }
+
+
