@@ -57,6 +57,7 @@ func (rmq * Rabbitmq) check() {
 
 			if found == len(rmq.Conf.Nodes) {
 				rmq.Status.PartOfCluster = true
+				rmq.lg.Println("RABBIT IS OK")
 			} else {
 				rmq.Status.PartOfCluster = false
 				rmq.lg.Println("Can not find all nodes in cluster")
