@@ -9,7 +9,7 @@ import (
 )
 type Galera struct {
 	Conf ConfGalera
-	Status Status
+	Status * Status
 	lg log.Logger
 }
 

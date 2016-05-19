@@ -19,7 +19,7 @@ type ConfRabbitmq struct {
 
 type Rabbitmq struct {
 	Conf ConfRabbitmq
-	Status Status
+	Status * Status
 	lg log.Logger
 }
 

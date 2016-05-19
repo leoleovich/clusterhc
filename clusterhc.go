@@ -32,7 +32,7 @@ func main() {
 
 
 	if conf.Galera.Enabled {
-		g := Galera{conf.Galera, Status{false, time.Now(), conf.Galera.Interval*2}, *lg}
+		g := Galera{conf.Galera, &Status{false, time.Now(), conf.Galera.Interval*2}, *lg}
 		/*
 		We do asynchronous checking, that ddos of check will not kill database
 		 */
@@ -42,7 +42,7 @@ func main() {
 
 
 	if conf.Rabbitmq.Enabled {
-		rmq := Rabbitmq{conf.Rabbitmq, Status{false, time.Now(), conf.Rabbitmq.Interval*2}, *lg}
+		rmq := Rabbitmq{conf.Rabbitmq, &Status{false, time.Now(), conf.Rabbitmq.Interval*2}, *lg}
 		/*
 		We do asynchronous checking, that ddos of check will not kill database
 		 */
