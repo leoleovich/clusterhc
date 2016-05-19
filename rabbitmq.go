@@ -59,7 +59,7 @@ func (rmq * Rabbitmq) check() {
 				rmq.Status.PartOfCluster = true
 			} else {
 				rmq.Status.PartOfCluster = false
-				rmq.lg.Println("Can not find all node in cluster")
+				rmq.lg.Println("Can not find all nodes in cluster")
 			}
 		}
 	}
