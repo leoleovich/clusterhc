@@ -63,7 +63,7 @@ func (rmq * Rabbitmq) check() {
 				rmq.lg.Println("Can not find all nodes in cluster")
 			}
 		}
+		res.Body.Close()
 	}
-	res.Body.Close()
 	rmq.Status.Timestamp = time.Now()
 }
