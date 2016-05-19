@@ -25,45 +25,46 @@ type Rabbitmq struct {
 
 func (rmq * Rabbitmq) check() {
 
-	client := &http.Client{Timeout: time.Duration(rmq.Conf.Interval/2) * time.Second,}
-	url := "http://" + rmq.Conf.Host + ":" + strconv.Itoa(rmq.Conf.Port) + "/api/nodes"
-	req, err := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth(rmq.Conf.User, rmq.Conf.Pass)
-	res, err := client.Do(req)
-	if err != nil {
-		rmq.lg.Println(err.Error())
-		rmq.Status.PartOfCluster = false
-
-	} else {
-		decoder := json.NewDecoder(res.Body)
-		type Node struct {
-			Name string
-		}
-		var n []Node
-		err = decoder.Decode(&n)
+	for ;; time.Sleep(time.Duration(rmq.Conf.Interval) * time.Second) {
+		client := &http.Client{Timeout: time.Duration(rmq.Conf.Interval / 2) * time.Second, }
+		url := "http://" + rmq.Conf.Host + ":" + strconv.Itoa(rmq.Conf.Port) + "/api/nodes"
+		req, err := http.NewRequest("GET", url, nil)
+		req.SetBasicAuth(rmq.Conf.User, rmq.Conf.Pass)
+		res, err := client.Do(req)
 		if err != nil {
 			rmq.lg.Println(err.Error())
 			rmq.Status.PartOfCluster = false
 		} else {
-			var found int
-			for _, node := range n {
-				for _, nodeToCheck := range rmq.Conf.Nodes {
-					if (node.Name == "rabbit@" + nodeToCheck) {
-						found++
-						break
+			decoder := json.NewDecoder(res.Body)
+			type Node struct {
+				Name string
+			}
+			var n []Node
+			err = decoder.Decode(&n)
+			if err != nil {
+				rmq.lg.Println(err.Error())
+				rmq.Status.PartOfCluster = false
+			} else {
+				var found int
+				for _, node := range n {
+					for _, nodeToCheck := range rmq.Conf.Nodes {
+						if (node.Name == "rabbit@" + nodeToCheck) {
+							found++
+							break
+						}
 					}
 				}
-			}
 
-			if found == len(rmq.Conf.Nodes) {
-				rmq.Status.PartOfCluster = true
-				rmq.lg.Println("RABBIT IS OK")
-			} else {
-				rmq.Status.PartOfCluster = false
-				rmq.lg.Println("Can not find all nodes in cluster")
+				if found == len(rmq.Conf.Nodes) {
+					rmq.Status.PartOfCluster = true
+					rmq.lg.Println("RABBIT IS OK")
+				} else {
+					rmq.Status.PartOfCluster = false
+					rmq.lg.Println("Can not find all nodes in cluster")
+				}
 			}
+			res.Body.Close()
 		}
-		res.Body.Close()
+		rmq.Status.Timestamp = time.Now()
 	}
-	rmq.Status.Timestamp = time.Now()
 }
