@@ -1,21 +1,21 @@
 package main
 
 import (
-	"time"
-	"net/http"
 	"fmt"
+	"net/http"
+	"time"
 )
 
 type Status struct {
 	PartOfCluster bool
-	Timestamp time.Time
-	Expired int
+	Timestamp     time.Time
+	Expired       int
 }
 
-const reply_200  = "Cluster Node is up"
-const reply_500  = "Cluster Node is down"
+const reply_200 = "Cluster Node is up"
+const reply_500 = "Cluster Node is down"
 
-func (s * Status) get(w http.ResponseWriter, r *http.Request) {
+func (s *Status) get(w http.ResponseWriter, r *http.Request) {
 	intervalAgo := time.Now().Add(-time.Duration(s.Expired) * time.Second)
 
 	// We need to check if result is fresh

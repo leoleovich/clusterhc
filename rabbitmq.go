@@ -1,32 +1,33 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
-	"encoding/json"
 	"time"
-	"log"
 )
+
 type ConfRabbitmq struct {
-	Enabled bool
+	Enabled  bool
 	Interval int
-	User string
-	Pass string
-	Host string
-	Port int
-	Nodes []string
+	User     string
+	Pass     string
+	Host     string
+	Port     int
+	Nodes    []string
 }
 
 type Rabbitmq struct {
-	Conf ConfRabbitmq
+	Conf   ConfRabbitmq
 	Status Status
-	lg log.Logger
+	lg     log.Logger
 }
 
-func (rmq * Rabbitmq) check() {
+func (rmq *Rabbitmq) check() {
 
-	for ;; time.Sleep(time.Duration(rmq.Conf.Interval) * time.Second) {
-		client := &http.Client{Timeout: time.Duration(rmq.Conf.Interval/2+1) * time.Second, }
+	for ; ; time.Sleep(time.Duration(rmq.Conf.Interval) * time.Second) {
+		client := &http.Client{Timeout: time.Duration(rmq.Conf.Interval/2+1) * time.Second}
 		url := "http://" + rmq.Conf.Host + ":" + strconv.Itoa(rmq.Conf.Port) + "/api/nodes"
 		req, err := http.NewRequest("GET", url, nil)
 		req.SetBasicAuth(rmq.Conf.User, rmq.Conf.Pass)
@@ -48,7 +49,7 @@ func (rmq * Rabbitmq) check() {
 				var found int
 				for _, node := range n {
 					for _, nodeToCheck := range rmq.Conf.Nodes {
-						if (node.Name == "rabbit@" + nodeToCheck) {
+						if node.Name == "rabbit@"+nodeToCheck {
 							found++
 							break
 						}
