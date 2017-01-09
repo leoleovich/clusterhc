@@ -3,9 +3,9 @@ package main
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"strconv"
 	"time"
 	"log"
+	"fmt"
 )
 type Galera struct {
 	Conf ConfGalera
@@ -37,9 +37,16 @@ func (g * Galera) check() {
 		var wsrep_local_state int
 		var varName string
 
-		db, err := sql.Open("mysql", g.Conf.User + ":" + g.Conf.Pass + "@tcp(" + g.Conf.Host + ":" + strconv.Itoa(g.Conf.Port) + ")/")
-		err = db.QueryRow(wsrep_local_state_query, "wsrep_local_state").Scan(&varName, &wsrep_local_state)
+		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/?timeout=%ds&readTimeout=%ds", g.Conf.User, g.Conf.Pass, g.Conf.Host, g.Conf.Port, g.Conf.Interval/2+1, g.Conf.Interval/2+1))
+		if err != nil {
+			g.lg.Println("Timeout while connecting to mysql", err.Error())
+			g.Status.PartOfCluster = false
+			g.Status.Timestamp = time.Now()
+			return
+		}
+		defer db.Close()
 
+		err = db.QueryRow(wsrep_local_state_query, "wsrep_local_state").Scan(&varName, &wsrep_local_state)
 		if err != nil {
 			g.lg.Println("Error querying " + wsrep_local_state_query + ": ", err.Error())
 			g.Status.PartOfCluster = false
@@ -59,7 +66,6 @@ func (g * Galera) check() {
 				}
 			}
 		}
-		db.Close()
 		g.Status.Timestamp = time.Now()
 	}
 }

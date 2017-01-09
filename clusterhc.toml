@@ -12,11 +12,11 @@ port = 3306
 local_state = 4
 sst_method = "xtrabackup-v2"
 
-[rabbitmq]
-enabled = true
-interval = 5
-user = "rabbitmq_user"
-pass = "rabbitmq_pass"
-host = "localhost"
-port = 15672
-nodes = [ "node1", "node2", "node3" ]
+#[rabbitmq]
+#enabled = true
+#interval = 5
+#user = "rabbitmq_user"
+#pass = "rabbitmq_pass"
+#host = "localhost"
+#port = 15672
+#nodes = [ "node1", "node2", "node3" ]

@@ -26,7 +26,7 @@ type Rabbitmq struct {
 func (rmq * Rabbitmq) check() {
 
 	for ;; time.Sleep(time.Duration(rmq.Conf.Interval) * time.Second) {
-		client := &http.Client{Timeout: time.Duration(rmq.Conf.Interval / 2) * time.Second, }
+		client := &http.Client{Timeout: time.Duration(rmq.Conf.Interval/2+1) * time.Second, }
 		url := "http://" + rmq.Conf.Host + ":" + strconv.Itoa(rmq.Conf.Port) + "/api/nodes"
 		req, err := http.NewRequest("GET", url, nil)
 		req.SetBasicAuth(rmq.Conf.User, rmq.Conf.Pass)
