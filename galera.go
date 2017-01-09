@@ -40,9 +40,9 @@ func (g *Galera) check() {
 			g.lg.Println("Timeout while connecting to mysql", err.Error())
 			g.Status.PartOfCluster = false
 			g.Status.Timestamp = time.Now()
-			return
+			db.Close()
+			continue
 		}
-		defer db.Close()
 
 		err = db.QueryRow(wsrep_local_state_query, "wsrep_local_state").Scan(&varName, &wsrep_local_state)
 		if err != nil {
@@ -65,5 +65,6 @@ func (g *Galera) check() {
 			}
 		}
 		g.Status.Timestamp = time.Now()
+		db.Close()
 	}
 }
