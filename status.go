@@ -17,6 +17,7 @@ const reply_500 = "Cluster Node is down"
 
 func (s *Status) get(w http.ResponseWriter, r *http.Request) {
 	intervalAgo := time.Now().Add(-time.Duration(s.Expired) * time.Second)
+	defer r.Body.Close()
 
 	// We need to check if result is fresh
 	if s.Timestamp.After(intervalAgo) {
