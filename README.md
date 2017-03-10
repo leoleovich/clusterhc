@@ -24,3 +24,9 @@ This will let you to exclude node from LBpool.
 - Compile project: ```go install github.com/leoleovich/clusterhc```
 - Copy config file: ```mkdir /etc/clusterhc && cp /opt/go/src/github.com/leoleovich/clusterhc/clusterhc.toml /etc/clusterhc/```
 - Run it ```/opt/go/bin/clusterhc```
+
+# Optional systemd service
+- Create systemd service: ```cp /opt/go/src/github.com/leoleovich/clusterhc/clusterhc.service /usr/lib/systemd/system```
+- Reload systemd: ```systemctl daemon-reload```
+- Start clusterhc service: ```systemctl start clusterhc.service``` 
+- Check status: ```systemctl status clusterhc.service```
