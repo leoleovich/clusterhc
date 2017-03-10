@@ -21,6 +21,7 @@ type ConfGalera struct {
 	Pass        string
 	Host        string
 	Port        int
+	Socket      string
 	Local_state int
 	Sst_method  string
 }
@@ -29,13 +30,35 @@ type ConfGalera struct {
 const wsrep_local_state_query = "show global status where variable_name = ?"
 const wsrep_sst_method_query = "show global variables where variable_name = ?"
 
+func (c *ConfGalera) getConnectionString() string {
+	if c.User == "" {
+		c.User = "root"
+	}
+	if c.Host == "" {
+		c.Host = "localhost"
+	}
+	if c.Port == 0 {
+		c.Port = 3306
+	}
+	protocol := fmt.Sprintf("tcp(%s:%d)", c.Host, c.Port)
+	if c.Socket != "" {
+		protocol = fmt.Sprintf("unix(%s)", c.Socket)
+	}
+
+	if c.Pass == "" {
+		return fmt.Sprintf("%s@%s/", c.User, protocol)
+	} else {
+		return fmt.Sprintf("%s:%s@%s/", c.User, c.Pass, protocol)
+	}
+}
+
 func (g *Galera) check() {
 	for ; ; time.Sleep(time.Duration(g.Conf.Interval) * time.Second) {
 		var wsrep_sst_method string
 		var wsrep_local_state int
 		var varName string
 
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/?timeout=%ds&readTimeout=%ds", g.Conf.User, g.Conf.Pass, g.Conf.Host, g.Conf.Port, g.Conf.Interval/2+1, g.Conf.Interval/2+1))
+		db, err := sql.Open("mysql", fmt.Sprintf("%s?timeout=%ds&readTimeout=%ds", g.Conf.getConnectionString(), g.Conf.Interval/2+1, g.Conf.Interval/2+1))
 		if err != nil {
 			g.lg.Println("Timeout while connecting to mysql", err.Error())
 			g.Status.PartOfCluster = false
