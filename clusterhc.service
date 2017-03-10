@@ -1,0 +1,10 @@
+[Unit]
+Description=ClusterHC light proxy that checks locally node cluster status
+After=network.target
+
+[Service]
+ExecStart=/opt/go/bin/clusterhc
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
