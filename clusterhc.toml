@@ -7,8 +7,9 @@ enabled = true
 interval = 5
 user = "mysql_user"
 pass = "mysql_pass"
-host = "localhost"
-port = 3306
+#host = "localhost"
+#port = 3306
+socket="/var/run/mysqld/mysqld.sock"
 local_state = 4
 sst_method = "xtrabackup-v2"
 
