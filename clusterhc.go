@@ -10,10 +10,12 @@ import (
 )
 
 type Config struct {
-	LocalBind string
-	Log       string
-	Galera    ConfGalera
-	Rabbitmq  ConfRabbitmq
+	LocalBind        string
+	Log              string
+	MonitoringPrefix string
+	MonitoringAddr   string
+	Galera           ConfGalera
+	Rabbitmq         ConfRabbitmq
 }
 
 func main() {
@@ -29,8 +31,15 @@ func main() {
 	}
 	lg := log.New(f, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
 
+	monitoring := &Monitoring{0, 0, conf.MonitoringAddr, conf.MonitoringPrefix, lg}
+	if conf.MonitoringAddr == "" {
+		lg.Println("Monitoring is disabled")
+	} else {
+		go monitoring.report()
+	}
+
 	if conf.Galera.Enabled {
-		g := Galera{conf.Galera, Status{false, time.Now(), conf.Galera.Interval * 2}, *lg}
+		g := Galera{conf.Galera, Status{false, time.Now(), conf.Galera.Interval * 2, monitoring}, *lg}
 		/*
 			We do asynchronous checking, that ddos of check will not kill database
 		*/
@@ -39,7 +48,7 @@ func main() {
 	}
 
 	if conf.Rabbitmq.Enabled {
-		rmq := Rabbitmq{conf.Rabbitmq, Status{false, time.Now(), conf.Rabbitmq.Interval * 2}, *lg}
+		rmq := Rabbitmq{conf.Rabbitmq, Status{false, time.Now(), conf.Rabbitmq.Interval * 2, monitoring}, *lg}
 		/*
 			We do asynchronous checking, that ddos of check will not kill database
 		*/

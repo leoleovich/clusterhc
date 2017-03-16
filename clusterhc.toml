@@ -1,6 +1,8 @@
 # Meaning of params please see at https://github.com/leoleovich/clusterhc/blob/master/README.md
 localBind = "0.0.0.0:9200"
 log = "/var/log/clusterhc/clusterhc.log"
+#monitoringAddr = "127.0.0.1:2003"
+monitoringPrefix = "servers.HOSTNAME.software"
 
 [galera]
 enabled = true

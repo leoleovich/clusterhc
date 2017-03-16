@@ -10,6 +10,7 @@ type Status struct {
 	PartOfCluster bool
 	Timestamp     time.Time
 	Expired       int
+	monitoring    *Monitoring
 }
 
 const reply_200 = "Cluster Node is up"
@@ -24,10 +25,12 @@ func (s *Status) get(w http.ResponseWriter, r *http.Request) {
 		if s.PartOfCluster {
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprintln(w, reply_200)
+			s.monitoring.Requests200++
 			return
 		} else {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			fmt.Fprintln(w, reply_500)
+			s.monitoring.Requests500++
 			return
 		}
 	} else {
@@ -35,6 +38,7 @@ func (s *Status) get(w http.ResponseWriter, r *http.Request) {
 		//g.lg.Println("Looks like result of check is outdated")
 		w.WriteHeader(http.StatusServiceUnavailable)
 		fmt.Fprintln(w, reply_500)
+		s.monitoring.Requests500++
 		return
 	}
 }
