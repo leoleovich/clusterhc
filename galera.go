@@ -81,7 +81,7 @@ func (g *Galera) check() {
 				if wsrep_local_state == g.Conf.Local_state && wsrep_sst_method == g.Conf.Sst_method {
 					g.Status.PartOfCluster = true
 				} else {
-					g.lg.Printf("wsrep_local_state is %s, but should be %d", wsrep_local_state, g.Conf.Local_state)
+					g.lg.Printf("wsrep_local_state is %d, but should be %d", wsrep_local_state, g.Conf.Local_state)
 					g.lg.Printf("wsrep_sst_method is %s, but should be %s", wsrep_sst_method, g.Conf.Sst_method)
 					g.Status.PartOfCluster = false
 				}
