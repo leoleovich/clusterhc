@@ -22,7 +22,7 @@ This will let you to exclude node from LBpool.
 - Clone this project to src: ```go get github.com/leoleovich/clusterhc```
 - Fetch dependencies: ```cd /opt/go/github.com/leoleovich/clusterhc && go get ./...```
 - Compile project: ```go install github.com/leoleovich/clusterhc```
-- Copy config file: ```mkdir /etc/clusterhc && cp /opt/go/src/github.com/leoleovich/clusterhc/clusterhc.toml /etc/clusterhc/```
+- Copy config file: ```mkdir /etc/clusterhc /var/log/clusterhc && cp /opt/go/src/github.com/leoleovich/clusterhc/clusterhc.toml /etc/clusterhc/```
 - Run it ```/opt/go/bin/clusterhc```
 
 # Optional systemd service
